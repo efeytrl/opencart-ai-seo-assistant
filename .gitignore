@@ -1,0 +1,6 @@
+# Generated OpenCart installer archives are published separately from source.
+*.ocmod.zip
+
+# Operating system artifacts
+.DS_Store
+Thumbs.db
