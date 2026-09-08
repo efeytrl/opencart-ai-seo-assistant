@@ -239,7 +239,7 @@ class ControllerExtensionModuleAiSeo extends Controller {
 		$this->response->addHeader('Content-Type: application/json'); $this->response->setOutput(json_encode($json));
 	}
 
-	private function extensionVersion() { return '1.9.4'; }
+	private function extensionVersion() { return '1.9.5'; }
 
 	private function latestRelease() {
 		if (!function_exists('curl_init')) return array('error' => 'Sunucuda cURL etkin olmadığı için güncelleme denetlenemedi.');

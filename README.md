@@ -60,7 +60,7 @@ Screenshots are stored in `docs/images/`. The main dashboard is available now; t
 
 ## Installation
 
-1. Download or build `ai-seo-assistant-v1.9.4.ocmod.zip`.
+1. Download or build `ai-seo-assistant-v1.9.5.ocmod.zip`.
 2. In OpenCart Admin, open **Extensions → Installer** and upload the ZIP file.
 3. Open **Extensions → Modifications** and click **Refresh**.
 4. Go to **Extensions → Extensions → Modules**.
@@ -190,7 +190,7 @@ Görseller `docs/images/` klasöründe tutulur. Ana ekran eklendi; diğer ekranl
 
 ## Kurulum
 
-1. `ai-seo-assistant-v1.9.4.ocmod.zip` paketini indirin veya oluşturun.
+1. `ai-seo-assistant-v1.9.5.ocmod.zip` paketini indirin veya oluşturun.
 2. OpenCart yönetim panelinde **Eklentiler → Yükleyici** ekranını açıp ZIP dosyasını yükleyin.
 3. **Eklentiler → Değişiklikler** ekranında **Yenile** düğmesine basın.
 4. **Eklentiler → Eklentiler → Modüller** ekranına gidin.
