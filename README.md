@@ -118,6 +118,10 @@ For each product, the extension updates SEO fields and may add suitable existing
 - AI-ready summaries and FAQ content improve structured, direct-answer content but cannot guarantee visibility in Google or AI search experiences.
 - Review generated copy before publishing, especially product claims, certifications, health statements, pricing, and availability.
 
+## License
+
+This project uses the [AI SEO Assistant Community License](LICENSE), **not** the MIT License. You may use, study, modify, and share it for free, including in a commercial store. Selling, paid redistribution, or bundling the extension or a derivative into a paid product or service requires the copyright holder's prior written permission.
+
 ---
 
 <a id="turkce"></a>
@@ -238,3 +242,7 @@ Görseller `docs/images/` klasöründe tutulur. Ana ekran eklendi; diğer ekranl
 - Rakip taraması yalnızca eklediğiniz herkese açık URL’leri okur; Google sıralamasını kontrol etmez ve sonuç garantisi vermez.
 - AI arama özeti ve SSS, doğrudan cevaplanabilir içeriği güçlendirir; Google veya AI arama sonuçlarında görünürlük garantisi vermez.
 - Üretilen metinleri yayına almadan önce iddia, sertifika, sağlık, fiyat ve stok bilgisi açısından kontrol edin.
+
+## Lisans
+
+Bu proje MIT değil, [AI SEO Assistant Community License](LICENSE) ile lisanslanır. Eklentiyi ücretsiz olarak kullanabilir, inceleyebilir, geliştirebilir ve paylaşabilirsiniz; ticari mağazanızda ücretsiz kullanım da serbesttir. Eklentinin veya türetilmiş bir sürümünün satılması, ücretli yeniden dağıtımı ya da ücretli ürün/hizmete paketlenmesi için telif sahibinden yazılı izin alınması gerekir.
