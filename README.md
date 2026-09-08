@@ -17,6 +17,7 @@ Create consistent, reviewable product and category SEO content directly from the
 - Tracks provider, model, SEO score, token usage, estimated cost, and generated history.
 - Offers a task center for missing product data, duplicate SEO signals, intent clusters, and schema checks.
 - Saves snapshots for new product generations so eligible history records can be rolled back.
+- Checks the official GitHub Releases feed and installs verified OCMOD updates directly from the extension dashboard.
 
 ## Screenshots
 
@@ -59,12 +60,16 @@ Screenshots are stored in `docs/images/`. The main dashboard is available now; t
 
 ## Installation
 
-1. Download or build `ai-seo-assistant-v1.9.3.ocmod.zip`.
+1. Download or build `ai-seo-assistant-v1.9.4.ocmod.zip`.
 2. In OpenCart Admin, open **Extensions → Installer** and upload the ZIP file.
 3. Open **Extensions → Modifications** and click **Refresh**.
 4. Go to **Extensions → Extensions → Modules**.
 5. Find **AI SEO Assistant**, click **Install**, then click **Edit**.
 6. The gradient **AI SEO Assistant** entry appears as a separate link in the left navigation.
+
+### Updating
+
+Use **Check for updates** from the extension dashboard. When a newer official GitHub release is available, the extension downloads only the matching `ai-seo-assistant-v*.ocmod.zip` asset, validates its identity and version, creates a server-side backup of replaced files, installs it, and refreshes OpenCart modifications.
 
 ## First-time setup
 
@@ -144,6 +149,7 @@ OpenCart yönetim panelinden ürün ve kategori SEO içeriklerini daha tutarlı 
 - Sağlayıcı, model, SEO skoru, token, tahmini maliyet ve işlem geçmişini kaydeder.
 - Eksik ürün verisi, yinelenen SEO sinyali, niyet kümeleri ve şema kontrolleri için görev merkezi sunar.
 - Yeni ürün üretimlerinde önceki SEO değerlerini saklayarak uygun kayıtlarda geri alma imkânı verir.
+- Resmî GitHub Releases yayınlarını denetler; doğrulanmış OCMOD güncellemelerini eklenti ekranından doğrudan kurar.
 
 ## Görseller
 
@@ -184,12 +190,16 @@ Görseller `docs/images/` klasöründe tutulur. Ana ekran eklendi; diğer ekranl
 
 ## Kurulum
 
-1. `ai-seo-assistant-v1.9.3.ocmod.zip` paketini indirin veya oluşturun.
+1. `ai-seo-assistant-v1.9.4.ocmod.zip` paketini indirin veya oluşturun.
 2. OpenCart yönetim panelinde **Eklentiler → Yükleyici** ekranını açıp ZIP dosyasını yükleyin.
 3. **Eklentiler → Değişiklikler** ekranında **Yenile** düğmesine basın.
 4. **Eklentiler → Eklentiler → Modüller** ekranına gidin.
 5. **AI SEO Assistant** satırını kurun ve düzenleyin.
 6. Sol menüde gradient arka planlı **AI SEO Asistanı** bağlantısını kullanın.
+
+### Güncelleme
+
+Eklenti ana ekranındaki **Güncellemeleri denetle** düğmesini kullanın. Yeni bir resmî GitHub yayını bulunduğunda yalnızca sürümle eşleşen `ai-seo-assistant-v*.ocmod.zip` paketi indirilir; paket kimliği ve sürümü doğrulanır, değişecek dosyalar sunucuda yedeklenir, kurulum yapılır ve OpenCart değişiklikleri otomatik yenilenir.
 
 ## İlk ayarlar
 

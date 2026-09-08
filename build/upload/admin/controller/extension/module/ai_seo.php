@@ -19,6 +19,9 @@ class ControllerExtensionModuleAiSeo extends Controller {
 		$data['tasks_url'] = $this->url->link('extension/module/ai_seo/tasks', 'user_token=' . $this->session->data['user_token'], true);
 		$data['category_audit'] = $this->url->link('extension/module/ai_seo/categoryAudit', 'user_token=' . $this->session->data['user_token'], true);
 		$data['categories_url'] = $this->url->link('catalog/category', 'user_token=' . $this->session->data['user_token'], true);
+		$data['extension_version'] = $this->extensionVersion();
+		$data['update_status_url'] = $this->url->link('extension/module/ai_seo/updateStatus', 'user_token=' . $this->session->data['user_token'], true);
+		$data['update_install_url'] = $this->url->link('extension/module/ai_seo/update', 'user_token=' . $this->session->data['user_token'], true);
 		$data['settings'] = $this->model_setting_setting->getSetting('module_ai_seo');
 		$data['history_summary'] = $this->historySummary();
 		$data['site_profile'] = !empty($data['settings']['module_ai_seo_site_profile']) ? json_decode($data['settings']['module_ai_seo_site_profile'], true) : array();
@@ -199,6 +202,123 @@ class ControllerExtensionModuleAiSeo extends Controller {
 			foreach ($labels as $id => $label) if (!empty($settings['module_ai_seo_' . $id . '_key'])) $json['providers'][] = array('id' => $id, 'label' => $label, 'model' => !empty($settings['module_ai_seo_' . $id . '_model']) ? $settings['module_ai_seo_' . $id . '_model'] : 'Varsayılan model', 'selected' => (!empty($settings['module_ai_seo_provider']) ? $settings['module_ai_seo_provider'] : 'openrouter') === $id);
 		}
 		$this->response->addHeader('Content-Type: application/json'); $this->response->setOutput(json_encode($json));
+	}
+
+	public function updateStatus() {
+		$json = array('current_version' => $this->extensionVersion(), 'update_available' => false);
+		if (!$this->user->hasPermission('access', 'extension/module/ai_seo')) $json['error'] = 'Yetkiniz yok.';
+		else {
+			$release = $this->latestRelease();
+			if (!empty($release['error'])) $json['error'] = $release['error'];
+			else {
+				$json['latest_version'] = $release['version'];
+				$json['release_url'] = $release['release_url'];
+				$json['notes'] = $release['notes'];
+				$json['update_available'] = version_compare($release['version'], $this->extensionVersion(), '>');
+			}
+		}
+		$this->response->addHeader('Content-Type: application/json'); $this->response->setOutput(json_encode($json));
+	}
+
+	public function update() {
+		$json = array();
+		if (!$this->user->hasPermission('modify', 'extension/module/ai_seo')) $json['error'] = 'Güncelleme için değiştirme yetkiniz yok.';
+		elseif ($this->request->server['REQUEST_METHOD'] !== 'POST') $json['error'] = 'Geçersiz güncelleme isteği.';
+		else {
+			$release = $this->latestRelease();
+			if (!empty($release['error'])) $json['error'] = $release['error'];
+			elseif (!version_compare($release['version'], $this->extensionVersion(), '>')) $json['error'] = 'Eklenti zaten güncel.';
+			else {
+				try {
+					$this->installReleasePackage($release);
+					$json['success'] = 'AI SEO Asistanı v' . $release['version'] . ' yüklendi. Değişiklikler yenilendi; sayfa şimdi yenilenecek.';
+					$json['version'] = $release['version'];
+				} catch (Exception $e) { $json['error'] = 'Güncelleme tamamlanamadı: ' . $e->getMessage(); }
+			}
+		}
+		$this->response->addHeader('Content-Type: application/json'); $this->response->setOutput(json_encode($json));
+	}
+
+	private function extensionVersion() { return '1.9.4'; }
+
+	private function latestRelease() {
+		if (!function_exists('curl_init')) return array('error' => 'Sunucuda cURL etkin olmadığı için güncelleme denetlenemedi.');
+		$url = 'https://api.github.com/repos/efeytrl/opencart-ai-seo-assistant/releases/latest';
+		$ch = curl_init($url);
+		curl_setopt_array($ch, array(CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 8, CURLOPT_TIMEOUT => 20, CURLOPT_HTTPHEADER => array('Accept: application/vnd.github+json', 'User-Agent: OpenCart-AI-SEO-Assistant/' . $this->extensionVersion()), CURLOPT_SSL_VERIFYPEER => true, CURLOPT_SSL_VERIFYHOST => 2));
+		$raw = curl_exec($ch); $http = curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch);
+		$release = json_decode($raw, true);
+		if ($http !== 200 || !is_array($release)) return array('error' => 'GitHub sürüm bilgisi şu anda alınamadı.');
+		$version = preg_replace('/^v/i', '', isset($release['tag_name']) ? $release['tag_name'] : '');
+		if (!preg_match('/^\d+(?:\.\d+){1,3}$/', $version)) return array('error' => 'GitHub yayın etiketi geçerli bir sürüm değil.');
+		$asset = array();
+		foreach (!empty($release['assets']) && is_array($release['assets']) ? $release['assets'] : array() as $item) {
+			if (!empty($item['name']) && $item['name'] === 'ai-seo-assistant-v' . $version . '.ocmod.zip' && !empty($item['browser_download_url'])) { $asset = $item; break; }
+		}
+		if (!$asset) return array('error' => 'Bu yayın için doğrulanmış OCMOD paketi bulunamadı.');
+		$asset_url = $asset['browser_download_url'];
+		if (parse_url($asset_url, PHP_URL_SCHEME) !== 'https' || parse_url($asset_url, PHP_URL_HOST) !== 'github.com') return array('error' => 'Güncelleme paketi güvenilir GitHub bağlantısından gelmiyor.');
+		return array('version' => $version, 'asset_url' => $asset_url, 'release_url' => !empty($release['html_url']) ? $release['html_url'] : '', 'notes' => utf8_substr(trim(strip_tags(isset($release['body']) ? $release['body'] : '')), 0, 4000));
+	}
+
+	private function installReleasePackage($release) {
+		if (!class_exists('ZipArchive')) throw new Exception('Sunucuda ZIP desteği etkin değil.');
+		$upload_dir = defined('DIR_UPLOAD') ? DIR_UPLOAD : DIR_STORAGE . 'upload/';
+		if (!is_dir($upload_dir) && !@mkdir($upload_dir, 0755, true)) throw new Exception('Geçici yükleme klasörü oluşturulamadı.');
+		$temp_file = tempnam($upload_dir, 'ai-seo-update-');
+		if (!$temp_file) throw new Exception('Geçici güncelleme dosyası oluşturulamadı.');
+		try {
+			$target = fopen($temp_file, 'wb');
+			if (!$target) throw new Exception('Güncelleme paketi için yazma izni yok.');
+			$ch = curl_init($release['asset_url']);
+			$options = array(CURLOPT_FILE => $target, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 3, CURLOPT_CONNECTTIMEOUT => 8, CURLOPT_TIMEOUT => 90, CURLOPT_HTTPHEADER => array('User-Agent: OpenCart-AI-SEO-Assistant/' . $this->extensionVersion()), CURLOPT_SSL_VERIFYPEER => true, CURLOPT_SSL_VERIFYHOST => 2);
+			if (defined('CURLOPT_PROTOCOLS') && defined('CURLPROTO_HTTPS')) $options[CURLOPT_PROTOCOLS] = CURLPROTO_HTTPS;
+			curl_setopt_array($ch, $options); $ok = curl_exec($ch); $http = curl_getinfo($ch, CURLINFO_HTTP_CODE); curl_close($ch); fclose($target);
+			if (!$ok || $http !== 200 || !is_file($temp_file) || filesize($temp_file) < 100 || filesize($temp_file) > 15728640) throw new Exception('Güncelleme paketi indirilemedi veya dosya boyutu geçersiz.');
+			$zip = new ZipArchive();
+			if ($zip->open($temp_file) !== true) throw new Exception('İndirilen dosya geçerli bir ZIP arşivi değil.');
+			$xml = $zip->getFromName('install.xml');
+			if (!$xml) { $zip->close(); throw new Exception('OCMOD install.xml dosyası pakette bulunamadı.'); }
+			$dom = new DOMDocument('1.0', 'UTF-8');
+			if (!@$dom->loadXML($xml) || !$dom->getElementsByTagName('code')->length || !$dom->getElementsByTagName('version')->length) { $zip->close(); throw new Exception('OCMOD manifesti geçerli değil.'); }
+			$code = trim($dom->getElementsByTagName('code')->item(0)->nodeValue);
+			$package_version = trim($dom->getElementsByTagName('version')->item(0)->nodeValue);
+			if ($code !== 'ai_seo_assistant' || $package_version !== $release['version']) { $zip->close(); throw new Exception('Paket kimliği veya sürümü yayınla eşleşmiyor.'); }
+			$root = realpath(DIR_APPLICATION . '../');
+			if (!$root) { $zip->close(); throw new Exception('OpenCart kök klasörü bulunamadı.'); }
+			$files = array();
+			for ($i = 0; $i < $zip->numFiles; $i++) {
+				$name = str_replace('\\', '/', $zip->getNameIndex($i));
+				if ($name === 'install.xml' || substr($name, -1) === '/') continue;
+				if (strpos($name, 'upload/admin/') !== 0 || strpos($name, '../') !== false || strpos($name, "\0") !== false) { $zip->close(); throw new Exception('Paket güvenli olmayan bir dosya yolu içeriyor.'); }
+				$relative = substr($name, 7);
+				$files[] = array('archive' => $name, 'relative' => $relative, 'target' => $root . '/' . $relative);
+			}
+			if (!$files) { $zip->close(); throw new Exception('Paket kurulacak dosya içermiyor.'); }
+			$backup_root = rtrim(DIR_STORAGE, '/\\') . '/backup/ai-seo-' . date('Ymd-His');
+			$written = array();
+			try {
+				foreach ($files as $file) {
+					$directory = dirname($file['target']);
+					if (!is_dir($directory) && !@mkdir($directory, 0755, true)) throw new Exception('Hedef klasör oluşturulamadı.');
+					$existed = is_file($file['target']); $backup = $backup_root . '/' . $file['relative'];
+					if ($existed) { if (!is_dir(dirname($backup)) && !@mkdir(dirname($backup), 0755, true)) throw new Exception('Yedek klasörü oluşturulamadı.'); if (!@copy($file['target'], $backup)) throw new Exception('Mevcut dosya yedeklenemedi.'); }
+					$source = $zip->getStream($file['archive']); $destination = @fopen($file['target'], 'wb');
+					if (!$source || !$destination) { if ($source) fclose($source); if ($destination) fclose($destination); throw new Exception('Güncelleme dosyası yazılamadı.'); }
+					stream_copy_to_stream($source, $destination); fclose($source); fclose($destination); $written[] = array('target' => $file['target'], 'backup' => $backup, 'existed' => $existed);
+				}
+			} catch (Exception $e) {
+				foreach (array_reverse($written) as $written_file) { if ($written_file['existed'] && is_file($written_file['backup'])) @copy($written_file['backup'], $written_file['target']); elseif (is_file($written_file['target'])) @unlink($written_file['target']); }
+				$zip->close(); throw $e;
+			}
+			$zip->close();
+			$this->load->model('setting/modification');
+			$existing = $this->db->query("SELECT modification_id FROM `" . DB_PREFIX . "modification` WHERE code='ai_seo_assistant'")->rows;
+			foreach ($existing as $modification) $this->model_setting_modification->deleteModification((int)$modification['modification_id']);
+			$this->model_setting_modification->addModification(array('name' => 'AI SEO Assistant', 'code' => 'ai_seo_assistant', 'author' => 'efeytrl', 'version' => $package_version, 'link' => 'https://github.com/efeytrl/opencart-ai-seo-assistant', 'xml' => $xml, 'status' => 1));
+			if (method_exists($this->model_setting_modification, 'refresh')) $this->model_setting_modification->refresh();
+		} catch (Exception $e) { if (is_file($temp_file)) @unlink($temp_file); throw $e; }
+		if (is_file($temp_file)) @unlink($temp_file);
 	}
 
 	private function generateProduct($product_id, $s) {

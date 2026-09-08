@@ -2,7 +2,7 @@
 <modification>
   <name>AI SEO Assistant</name>
   <code>ai_seo_assistant</code>
-  <version>1.9.3</version>
+  <version>1.9.4</version>
   <author>efeytrl</author>
   <link>https://openrouter.ai</link>
   <file path="admin/view/template/catalog/product_list.twig">
